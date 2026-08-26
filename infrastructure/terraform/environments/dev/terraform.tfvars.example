@@ -31,3 +31,8 @@ private_db_subnet_cidrs = [
 
 application_port = 8000
 database_port    = 5432
+
+ecr_repository_name             = "aws-ecs-fastapi-deployment"
+ecr_force_delete                = true
+ecr_max_image_count             = 5
+ecr_untagged_expiration_days    = 1

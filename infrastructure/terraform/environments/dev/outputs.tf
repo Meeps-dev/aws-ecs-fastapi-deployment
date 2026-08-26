@@ -78,3 +78,23 @@ output "rds_security_group_id" {
   description = "RDS security group ID"
   value       = module.security.rds_security_group_id
 }
+
+output "ecr_repository_name" {
+  description = "Name of the Week 13 ECR repository"
+  value       = module.ecr.repository_name
+}
+
+output "ecr_repository_arn" {
+  description = "ARN of the Week 13 ECR repository"
+  value       = module.ecr.repository_arn
+}
+
+output "ecr_repository_url" {
+  description = "URL used when pushing the FastAPI image"
+  value       = module.ecr.repository_url
+}
+
+output "ecr_registry_id" {
+  description = "AWS registry ID containing the repository"
+  value       = module.ecr.registry_id
+}

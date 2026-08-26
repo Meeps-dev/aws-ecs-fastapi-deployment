@@ -120,3 +120,27 @@ variable "database_port" {
   type        = number
   default     = 5432
 }
+
+variable "ecr_repository_name" {
+  description = "Name of the Week 13 ECR repository"
+  type        = string
+  default     = "aws-ecs-fastapi-deployment"
+}
+
+variable "ecr_force_delete" {
+  description = "Allow ECR deletion with images during development teardown"
+  type        = bool
+  default     = true
+}
+
+variable "ecr_max_image_count" {
+  description = "Maximum number of recent images retained in ECR"
+  type        = number
+  default     = 5
+}
+
+variable "ecr_untagged_expiration_days" {
+  description = "Days before untagged images are expired"
+  type        = number
+  default     = 1
+}

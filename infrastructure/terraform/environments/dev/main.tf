@@ -18,3 +18,13 @@ module "security" {
   database_port    = var.database_port
   tags             = local.common_tags
 }
+
+module "ecr" {
+  source = "../../modules/ecr"
+
+  repository_name          = var.ecr_repository_name
+  force_delete             = var.ecr_force_delete
+  max_image_count          = var.ecr_max_image_count
+  untagged_expiration_days = var.ecr_untagged_expiration_days
+  tags                     = local.common_tags
+}
