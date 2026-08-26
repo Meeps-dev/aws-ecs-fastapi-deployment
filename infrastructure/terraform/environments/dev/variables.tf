@@ -72,3 +72,51 @@ variable "github_branch" {
   type        = string
   default     = "main"
 }
+
+variable "vpc_cidr" {
+  description = "CIDR block assigned to the Week 13 VPC"
+  type        = string
+  default     = "10.13.0.0/16"
+}
+
+variable "availability_zones" {
+  description = "Two Availability Zones used by Week 13"
+  type        = list(string)
+
+  default = [
+    "eu-west-2a",
+    "eu-west-2b"
+  ]
+}
+
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for the two public subnets"
+  type        = list(string)
+
+  default = [
+    "10.13.0.0/24",
+    "10.13.1.0/24"
+  ]
+}
+
+variable "private_db_subnet_cidrs" {
+  description = "CIDR blocks for the two private database subnets"
+  type        = list(string)
+
+  default = [
+    "10.13.10.0/24",
+    "10.13.11.0/24"
+  ]
+}
+
+variable "application_port" {
+  description = "Port exposed by the FastAPI application"
+  type        = number
+  default     = 8000
+}
+
+variable "database_port" {
+  description = "PostgreSQL database port"
+  type        = number
+  default     = 5432
+}
