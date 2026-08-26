@@ -1,0 +1,12 @@
+aws_region     = "eu-west-2"
+aws_account_id = "123456789012"
+
+project_name = "aws-ecs-fastapi-deployment"
+environment  = "dev"
+owner        = "your-name"
+
+github_owner         = "your-github-owner"
+github_owner_id      = "12345678"
+github_repository    = "aws-ecs-fastapi-deployment"
+github_repository_id = "123456789"
+github_branch        = "main"

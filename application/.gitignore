@@ -1,0 +1,48 @@
+# Python virtual environment
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+
+# MacOS system files
+.DS_Store
+
+# Database files (SQLite or temp)
+*.db
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Alembic cache (optional)
+alembic/versions/*.pyc
+
+# Pytest cache
+.pytest_cache/
+
+.coverage
+htmlcov/
+dist/
+build/
+.terraform/
+*.tfstate
+*.tfstate.*
+# Day 72 CI output
+.ruff_cache/
+
+coverage.xml
+htmlcov/
+reports/
+dist/
+.vscode/
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+.env
+.env.*
+!.env.example
+!.env.*.example

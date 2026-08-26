@@ -1,0 +1,50 @@
+# Version control and CI metadata
+.git
+.github
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+.venv
+venv
+
+# Python caches and generated files
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+.coverage.*
+htmlcov
+reports
+
+# Python packaging and build output
+dist
+build
+*.egg-info
+
+# Logs and local databases
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# Terraform local files and state
+.terraform
+terraform.tfstate
+terraform.tfstate.*
+
+# Operating-system and editor metadata
+.DS_Store
+.vscode
+.idea
+
+# Local Docker lab evidence
+docker/
