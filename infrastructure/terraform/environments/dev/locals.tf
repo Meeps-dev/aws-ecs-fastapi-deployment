@@ -10,6 +10,9 @@ locals {
     var.github_branch
   )
 
+  ssm_parameter_prefix = "/meeps/week-13/${var.environment}/${var.project_name}"
+
+
   common_tags = {
     project      = "meeps"
     workload     = var.project_name

@@ -36,3 +36,5 @@ ecr_repository_name             = "aws-ecs-fastapi-deployment"
 ecr_force_delete                = true
 ecr_max_image_count             = 5
 ecr_untagged_expiration_days    = 1
+
+ecs_image_digest = "sha256:7deb2e60f4b4d4c70bdc0a10bdcfd3fb67d220b65aaa1154c2e6474ebc13b843"

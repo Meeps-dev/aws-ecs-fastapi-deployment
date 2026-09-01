@@ -98,3 +98,66 @@ output "ecr_registry_id" {
   description = "AWS registry ID containing the repository"
   value       = module.ecr.registry_id
 }
+
+output "rds_instance_identifier" {
+  description = "Private PostgreSQL RDS instance identifier"
+  value       = module.rds.db_instance_identifier
+}
+
+output "rds_subnet_group_name" {
+  description = "Private RDS DB subnet group"
+  value       = module.rds.db_subnet_group_name
+}
+
+output "rds_address" {
+  description = "Private RDS endpoint address"
+  value       = module.rds.db_address
+}
+
+output "rds_port" {
+  description = "PostgreSQL listener port"
+  value       = module.rds.db_port
+}
+
+output "rds_database_name" {
+  description = "Application database name"
+  value       = module.rds.db_name
+}
+
+output "rds_username" {
+  description = "PostgreSQL master username"
+  value       = module.rds.db_username
+}
+
+output "rds_engine_version" {
+  description = "Actual PostgreSQL engine version"
+  value       = module.rds.engine_version
+}
+
+output "rds_publicly_accessible" {
+  description = "Whether the RDS instance has public access"
+  value       = module.rds.publicly_accessible
+}
+
+output "database_url_parameter_name" {
+  description = "SSM parameter injected into ECS as DATABASE_URL"
+  value       = module.rds.database_url_parameter_name
+}
+
+output "database_url_parameter_arn" {
+  description = "ARN injected into ECS as DATABASE_URL"
+  value       = module.rds.database_url_parameter_arn
+}
+
+output "db_password_parameter_arn" {
+  description = "Administrative DB password parameter; do not grant this directly to the application task"
+  value       = module.rds.db_password_parameter_arn
+}
+
+output "application_secret_parameter_arns" {
+  description = "Application SSM parameters that the future ECS execution role may retrieve"
+
+  value = {
+    SECRET_KEY = aws_ssm_parameter.application_secret_key.arn
+  }
+}
