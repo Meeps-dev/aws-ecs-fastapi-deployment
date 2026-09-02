@@ -161,3 +161,63 @@ output "application_secret_parameter_arns" {
     SECRET_KEY = aws_ssm_parameter.application_secret_key.arn
   }
 }
+
+output "ecs_cluster_name" {
+  description = "ecs cluster name"
+
+  value = module.ecs.cluster_name
+}
+
+output "ecs_cluster_arn" {
+  description = "ecs cluster arn"
+
+  value = module.ecs.cluster_arn
+}
+
+output "ecs_task_definition_arn" {
+  description = "ecs task definition family arn"
+
+  value = module.ecs.task_definition_arn
+}
+
+output "ecs_task_definition_revision" {
+  description = "ecs task definition revision"
+
+  value = module.ecs.task_definition_revision
+}
+
+output "ecs_execution_role_name" {
+  description = "ecs execution role name"
+
+  value = module.ecs.execution_role_name
+}
+
+output "ecs_execution_role_arn" {
+  description = "ecs execution role arn"
+
+  value = module.ecs.execution_role_arn
+}
+
+output "ecs_task_role_name" {
+  description = "ecs fastapi application task role name"
+
+  value = module.ecs.task_role_name
+}
+
+output "ecs_task_role_arn" {
+  description = "ecs fastapi application task role arn"
+
+  value = module.ecs.task_role_arn
+}
+
+output "ecs_log_group_name" {
+  description = "ecs cloudwatch log group name"
+
+  value = module.ecs.log_group_name
+}
+
+output "ecs_container_name" {
+  description = "ecs container name"
+
+  value = module.ecs.container_name
+}
