@@ -19,6 +19,20 @@ module "security" {
   tags             = local.common_tags
 }
 
+module "alb" {
+  source = "../../modules/alb"
+
+  load_balancer_name    = local.alb_name
+  target_group_name     = local.alb_target_group_name
+  vpc_id                = module.vpc.vpc_id
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  alb_security_group_id = module.security.alb_security_group_id
+  application_port      = var.application_port
+  health_check_path     = "/health"
+  tags                  = local.common_tags
+}
+
+
 module "ecr" {
   source = "../../modules/ecr"
 

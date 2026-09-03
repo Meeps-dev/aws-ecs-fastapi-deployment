@@ -221,3 +221,48 @@ output "ecs_container_name" {
 
   value = module.ecs.container_name
 }
+
+output "alb_arn" {
+  description = "ARN of the public Application Load Balancer"
+  value       = module.alb.load_balancer_arn
+}
+
+output "alb_dns_name" {
+  description = "Public DNS name of the Application Load Balancer"
+  value       = module.alb.load_balancer_dns_name
+}
+
+output "alb_url" {
+  description = "HTTP URL of the development Application Load Balancer"
+  value       = "http://${module.alb.load_balancer_dns_name}"
+}
+
+output "alb_listener_arn" {
+  description = "ARN of the HTTP listener"
+  value       = module.alb.listener_arn
+}
+
+output "alb_target_group_arn" {
+  description = "ARN of the ECS IP target group"
+  value       = module.alb.target_group_arn
+}
+
+output "alb_target_group_name" {
+  description = "Name of the ECS IP target group"
+  value       = module.alb.target_group_name
+}
+
+output "ecs_service_name" {
+  description = "Name of the FastAPI ECS service"
+  value       = aws_ecs_service.api.name
+}
+
+output "ecs_service_arn" {
+  description = "ARN of the FastAPI ECS service"
+  value       = aws_ecs_service.api.id
+}
+
+output "ecs_service_desired_count" {
+  description = "Number of FastAPI tasks maintained by the service"
+  value       = aws_ecs_service.api.desired_count
+}

@@ -257,4 +257,3 @@ variable "ecs_image_digest" {
     error_message = "ecs_image_digest must be sha256 followed by 64 lowercase hexadecimal characters."
   }
 }
-

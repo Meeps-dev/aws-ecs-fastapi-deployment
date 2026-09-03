@@ -1,6 +1,10 @@
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
 
+  alb_name              = "meeps-${var.environment}-alb"
+  alb_target_group_name = "meeps-${var.environment}-api-tg"
+  ecs_service_name      = "${local.name_prefix}-api-service"
+
   github_oidc_subject = format(
     "repo:%s@%s/%s@%s:ref:refs/heads/%s",
     var.github_owner,
