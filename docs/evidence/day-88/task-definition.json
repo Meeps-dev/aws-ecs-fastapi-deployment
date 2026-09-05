@@ -1,0 +1,120 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:eu-west-2:256748318717:task-definition/aws-ecs-fastapi-deployment-dev-api:1",
+    "containerDefinitions": [
+        {
+            "name": "fastapi",
+            "image": "256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment@sha256:7deb2e60f4b4d4c70bdc0a10bdcfd3fb67d220b65aaa1154c2e6474ebc13b843",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "PYTHONDONTWRITEBYTECODE",
+                    "value": "1"
+                },
+                {
+                    "name": "PYTHONUNBUFFERED",
+                    "value": "1"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "linuxParameters": {
+                "initProcessEnabled": true
+            },
+            "secrets": [
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:ssm:eu-west-2:256748318717:parameter/meeps/week-13/dev/aws-ecs-fastapi-deployment/database/url"
+                },
+                {
+                    "name": "SECRET_KEY",
+                    "valueFrom": "arn:aws:ssm:eu-west-2:256748318717:parameter/meeps/week-13/dev/aws-ecs-fastapi-deployment/application/secret-key"
+                }
+            ],
+            "stopTimeout": 30,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/meeps/week-13/dev/fastapi",
+                    "mode": "non-blocking",
+                    "max-buffer-size": "1m",
+                    "awslogs-region": "eu-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "aws-ecs-fastapi-deployment-dev-api",
+    "taskRoleArn": "arn:aws:iam::256748318717:role/aws-ecs-fastapi-deployment-dev-ecs-task",
+    "executionRoleArn": "arn:aws:iam::256748318717:role/aws-ecs-fastapi-deployment-dev-ecs-execution",
+    "networkMode": "awsvpc",
+    "revision": 1,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.28"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "ecs.capability.secrets.ssm.environment-variables"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.25"
+        },
+        {
+            "name": "ecs.capability.container-ordering"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "MANAGED_INSTANCES",
+        "FARGATE"
+    ],
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "registeredAt": "2026-09-01T20:31:47.949000+01:00",
+    "registeredBy": "arn:aws:iam::256748318717:user/meeps-admin"
+}
