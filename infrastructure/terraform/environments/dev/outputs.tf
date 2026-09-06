@@ -23,6 +23,15 @@ output "github_deploy_role_arn" {
   value       = aws_iam_role.github_deploy.arn
 }
 
+output "github_plan_role_name" {
+  description = "Name of the main-branch Terraform plan role"
+  value       = aws_iam_role.github_plan.name
+}
+
+output "github_plan_role_arn" {
+  description = "ARN of the main-branch Terraform plan role"
+  value       = aws_iam_role.github_plan.arn
+}
 
 output "vpc_id" {
   description = "ID of the Week 13 VPC"

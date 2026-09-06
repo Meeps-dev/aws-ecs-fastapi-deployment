@@ -55,6 +55,12 @@ resource "aws_ecs_service" "api" {
     }
   )
 
+  lifecycle {
+    ignore_changes = [
+      task_definition
+    ]
+  }
+
   timeouts {
     create = "30m"
     update = "30m"

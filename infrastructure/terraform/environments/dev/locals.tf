@@ -16,6 +16,10 @@ locals {
 
   ssm_parameter_prefix = "/meeps/week-13/${var.environment}/${var.project_name}"
 
+  terraform_state_bucket   = "meeps-terraform-state-${var.aws_account_id}-${var.aws_region}"
+  terraform_state_key      = "aws-ecs-fastapi-deployment/week-13/dev/terraform.tfstate"
+  terraform_state_lock_key = "${local.terraform_state_key}.tflock"
+
 
   common_tags = {
     project      = "meeps"
