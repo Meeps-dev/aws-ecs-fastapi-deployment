@@ -141,6 +141,23 @@ data "aws_iam_policy_document" "github_plan_permissions" {
   }
 
   statement {
+    sid    = "DescribeSSMParameterMetadata"
+    effect = "Allow"
+
+    actions = [
+      "ssm:DescribeParameters"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values   = [var.aws_region]
+    }
+  }
+
+  statement {
     sid    = "ReadRequiredTerraformParameters"
     effect = "Allow"
 
