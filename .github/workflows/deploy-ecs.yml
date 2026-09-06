@@ -1,0 +1,644 @@
+name: Deploy FastAPI to ECS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "application/**"
+      - ".github/workflows/deploy-ecs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ecs-deploy-dev
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
+  AWS_PAGER: ""
+  TF_DIR: infrastructure/terraform/environments/dev
+
+jobs:
+  deploy:
+    name: Immutable ECS rolling deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials through OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: ecs-deploy-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          mask-aws-account-id: true
+
+      - name: Confirm AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.16.0"
+          terraform_wrapper: false
+
+      - name: Read deployed infrastructure from Terraform state
+        id: infra
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          terraform -chdir="$TF_DIR" init -input=false
+
+          ECR_NAME="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw ecr_repository_name
+          )"
+
+          ECR_URI="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw ecr_repository_url
+          )"
+
+          CLUSTER_NAME="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw ecs_cluster_name
+          )"
+
+          SERVICE_NAME="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw ecs_service_name
+          )"
+
+          CONTAINER_NAME="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw ecs_container_name
+          )"
+
+          TARGET_GROUP_ARN="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw alb_target_group_arn
+          )"
+
+          ALB_URL="$(
+            terraform -chdir="$TF_DIR" \
+              output -raw alb_url
+          )"
+
+          OLD_TASK_DEFINITION="$(
+            aws ecs describe-services \
+              --cluster "$CLUSTER_NAME" \
+              --services "$SERVICE_NAME" \
+              --query 'services[0].taskDefinition' \
+              --output text
+          )"
+
+          OLD_TASK_ARN="$(
+            aws ecs list-tasks \
+              --cluster "$CLUSTER_NAME" \
+              --service-name "$SERVICE_NAME" \
+              --desired-status RUNNING \
+              --query 'taskArns[0]' \
+              --output text
+          )"
+
+          for value in \
+            "$ECR_NAME" \
+            "$ECR_URI" \
+            "$CLUSTER_NAME" \
+            "$SERVICE_NAME" \
+            "$CONTAINER_NAME" \
+            "$TARGET_GROUP_ARN" \
+            "$ALB_URL" \
+            "$OLD_TASK_DEFINITION"
+          do
+            if [ -z "$value" ] || [ "$value" = "None" ]; then
+              echo "A required infrastructure value is missing."
+              exit 1
+            fi
+          done
+
+          {
+            echo "ecr_name=$ECR_NAME"
+            echo "ecr_uri=$ECR_URI"
+            echo "cluster_name=$CLUSTER_NAME"
+            echo "service_name=$SERVICE_NAME"
+            echo "container_name=$CONTAINER_NAME"
+            echo "target_group_arn=$TARGET_GROUP_ARN"
+            echo "alb_url=$ALB_URL"
+            echo "old_task_definition=$OLD_TASK_DEFINITION"
+            echo "old_task_arn=$OLD_TASK_ARN"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this immutable tag already exists
+        id: image
+        shell: bash
+        env:
+          ECR_NAME: ${{ steps.infra.outputs.ecr_name }}
+        run: |
+          set +e
+
+          RESPONSE="$(
+            aws ecr describe-images \
+              --repository-name "$ECR_NAME" \
+              --image-ids "imageTag=$GITHUB_SHA" \
+              2>&1
+          )"
+
+          STATUS=$?
+
+          set -e
+
+          if [ "$STATUS" -eq 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "The Git-SHA image already exists and will be reused."
+          elif printf '%s' "$RESPONSE" \
+            | grep -q 'ImageNotFoundException'; then
+
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "The Git-SHA image does not exist and will be built."
+          else
+            printf '%s\n' "$RESPONSE"
+            exit "$STATUS"
+          fi
+
+      - name: Log in to Amazon ECR
+        if: steps.image.outputs.exists == 'false'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        if: steps.image.outputs.exists == 'false'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push linux-amd64 image
+        if: steps.image.outputs.exists == 'false'
+        uses: docker/build-push-action@v7
+        with:
+          context: application
+          file: application/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.infra.outputs.ecr_uri }}:${{ github.sha }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Resolve the immutable image digest
+        id: published-image
+        shell: bash
+        env:
+          ECR_NAME: ${{ steps.infra.outputs.ecr_name }}
+          ECR_URI: ${{ steps.infra.outputs.ecr_uri }}
+        run: |
+          set -euo pipefail
+
+          IMAGE_DIGEST=""
+
+          for attempt in $(seq 1 20); do
+            IMAGE_DIGEST="$(
+              aws ecr describe-images \
+                --repository-name "$ECR_NAME" \
+                --image-ids "imageTag=$GITHUB_SHA" \
+                --query 'imageDetails[0].imageDigest' \
+                --output text \
+                2>/dev/null \
+              || true
+            )"
+
+            if printf '%s\n' "$IMAGE_DIGEST" \
+              | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+              break
+            fi
+
+            echo "Waiting for ECR image metadata: attempt $attempt/20"
+            sleep 3
+          done
+
+          if ! printf '%s\n' "$IMAGE_DIGEST" \
+            | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+
+            echo "ECR did not return a valid image digest."
+            exit 1
+          fi
+
+          IMAGE_REFERENCE="${ECR_URI}@${IMAGE_DIGEST}"
+
+          {
+            echo "digest=$IMAGE_DIGEST"
+            echo "reference=$IMAGE_REFERENCE"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Deployment image: $IMAGE_REFERENCE"
+
+      - name: Download the currently active task definition
+        shell: bash
+        env:
+          OLD_TASK_DEFINITION: ${{ steps.infra.outputs.old_task_definition }}
+        run: |
+          set -euo pipefail
+
+          aws ecs describe-task-definition \
+            --task-definition "$OLD_TASK_DEFINITION" \
+            --query taskDefinition \
+            --output json \
+            > "$RUNNER_TEMP/current-task-definition.json"
+
+      - name: Render the new image into the task definition
+        id: render-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ runner.temp }}/current-task-definition.json
+          container-name: ${{ steps.infra.outputs.container_name }}
+          image: ${{ steps.published-image.outputs.reference }}
+
+      - name: Register revision and update ECS service
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-definition.outputs.task-definition }}
+          service: ${{ steps.infra.outputs.service_name }}
+          cluster: ${{ steps.infra.outputs.cluster_name }}
+          wait-for-service-stability: false
+          enable-ecs-managed-tags: true
+          propagate-tags: SERVICE
+          max-retries: 3
+
+      - name: Capture the new primary deployment
+        id: rollout
+        shell: bash
+        env:
+          CLUSTER_NAME: ${{ steps.infra.outputs.cluster_name }}
+          SERVICE_NAME: ${{ steps.infra.outputs.service_name }}
+          OLD_TASK_DEFINITION: ${{ steps.infra.outputs.old_task_definition }}
+        run: |
+          set -euo pipefail
+
+          NEW_TASK_DEFINITION=""
+
+          for attempt in $(seq 1 20); do
+            NEW_TASK_DEFINITION="$(
+              aws ecs describe-services \
+                --cluster "$CLUSTER_NAME" \
+                --services "$SERVICE_NAME" \
+                --query \
+                  'services[0].deployments[?status==`PRIMARY`]|[0].taskDefinition' \
+                --output text
+            )"
+
+            if [ -n "$NEW_TASK_DEFINITION" ] \
+              && [ "$NEW_TASK_DEFINITION" != "None" ] \
+              && [ "$NEW_TASK_DEFINITION" != "$OLD_TASK_DEFINITION" ]; then
+              break
+            fi
+
+            echo "Waiting for the new deployment: attempt $attempt/20"
+            sleep 3
+          done
+
+          if [ -z "$NEW_TASK_DEFINITION" ] \
+            || [ "$NEW_TASK_DEFINITION" = "None" ] \
+            || [ "$NEW_TASK_DEFINITION" = "$OLD_TASK_DEFINITION" ]; then
+
+            echo "The ECS service did not select a new task-definition revision."
+            exit 1
+          fi
+
+          echo "new_task_definition=$NEW_TASK_DEFINITION" \
+            >> "$GITHUB_OUTPUT"
+
+          aws ecs describe-services \
+            --cluster "$CLUSTER_NAME" \
+            --services "$SERVICE_NAME" \
+            --query 'services[0].{
+              Desired:desiredCount,
+              Running:runningCount,
+              Pending:pendingCount,
+              Deployments:deployments[].{
+                Status:status,
+                TaskDefinition:taskDefinition,
+                RolloutState:rolloutState,
+                Desired:desiredCount,
+                Running:runningCount,
+                Pending:pendingCount
+              }
+            }' \
+            --output json
+
+      - name: Wait for ECS service stabilization
+        shell: bash
+        env:
+          CLUSTER_NAME: ${{ steps.infra.outputs.cluster_name }}
+          SERVICE_NAME: ${{ steps.infra.outputs.service_name }}
+        run: |
+          set -euo pipefail
+
+          STABLE="false"
+
+          for attempt in $(seq 1 80); do
+            STATUS_LINE="$(
+              aws ecs describe-services \
+                --cluster "$CLUSTER_NAME" \
+                --services "$SERVICE_NAME" \
+                --output json \
+              | python3 -c '
+          import json
+          import sys
+
+          document = json.load(sys.stdin)
+          services = document.get("services", [])
+
+          if len(services) != 1:
+              raise SystemExit("Expected exactly one ECS service.")
+
+          service = services[0]
+          primary = next(
+              deployment
+              for deployment in service.get("deployments", [])
+              if deployment.get("status") == "PRIMARY"
+          )
+
+          print(
+              service["desiredCount"],
+              service["runningCount"],
+              service["pendingCount"],
+              primary.get("rolloutState", "UNKNOWN"),
+          )
+          '
+            )"
+
+            read -r DESIRED RUNNING PENDING ROLLOUT \
+              <<< "$STATUS_LINE"
+
+            printf \
+              'Attempt %s/80 — desired=%s running=%s pending=%s rollout=%s\n' \
+              "$attempt" \
+              "$DESIRED" \
+              "$RUNNING" \
+              "$PENDING" \
+              "$ROLLOUT"
+
+            if [ "$ROLLOUT" = "FAILED" ]; then
+              echo "The ECS deployment circuit breaker reported failure."
+              exit 1
+            fi
+
+            if [ "$ROLLOUT" = "COMPLETED" ] \
+              && [ "$RUNNING" = "$DESIRED" ] \
+              && [ "$PENDING" = "0" ]; then
+
+              STABLE="true"
+              break
+            fi
+
+            sleep 15
+          done
+
+          if [ "$STABLE" != "true" ]; then
+            echo "The ECS service did not stabilize within 20 minutes."
+            exit 1
+          fi
+
+      - name: Confirm the new task is running
+        id: new-task
+        shell: bash
+        env:
+          CLUSTER_NAME: ${{ steps.infra.outputs.cluster_name }}
+          SERVICE_NAME: ${{ steps.infra.outputs.service_name }}
+          NEW_TASK_DEFINITION: ${{ steps.rollout.outputs.new_task_definition }}
+        run: |
+          set -euo pipefail
+
+          NEW_TASK_ARN="$(
+            aws ecs list-tasks \
+              --cluster "$CLUSTER_NAME" \
+              --service-name "$SERVICE_NAME" \
+              --desired-status RUNNING \
+              --query 'taskArns[0]' \
+              --output text
+          )"
+
+          if [ -z "$NEW_TASK_ARN" ] || [ "$NEW_TASK_ARN" = "None" ]; then
+            echo "No running task was returned."
+            exit 1
+          fi
+
+          ACTUAL_TASK_DEFINITION="$(
+            aws ecs describe-tasks \
+              --cluster "$CLUSTER_NAME" \
+              --tasks "$NEW_TASK_ARN" \
+              --query 'tasks[0].taskDefinitionArn' \
+              --output text
+          )"
+
+          if [ "$ACTUAL_TASK_DEFINITION" != "$NEW_TASK_DEFINITION" ]; then
+            echo "The running task does not use the new revision."
+            exit 1
+          fi
+
+          echo "task_arn=$NEW_TASK_ARN" >> "$GITHUB_OUTPUT"
+
+          aws ecs describe-tasks \
+            --cluster "$CLUSTER_NAME" \
+            --tasks "$NEW_TASK_ARN" \
+            --query 'tasks[0].{
+              Status:lastStatus,
+              Health:healthStatus,
+              TaskDefinition:taskDefinitionArn,
+              StartedAt:startedAt,
+              Containers:containers[].{
+                Name:name,
+                Status:lastStatus,
+                Health:healthStatus
+              }
+            }' \
+            --output json
+
+      - name: Confirm the previous task drained
+        shell: bash
+        env:
+          CLUSTER_NAME: ${{ steps.infra.outputs.cluster_name }}
+          OLD_TASK_ARN: ${{ steps.infra.outputs.old_task_arn }}
+          NEW_TASK_ARN: ${{ steps.new-task.outputs.task_arn }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$OLD_TASK_ARN" ] \
+            || [ "$OLD_TASK_ARN" = "None" ] \
+            || [ "$OLD_TASK_ARN" = "$NEW_TASK_ARN" ]; then
+
+            echo "No distinct previous running task was recorded."
+            exit 1
+          fi
+
+          for attempt in $(seq 1 20); do
+            OLD_STATUS="$(
+              aws ecs describe-tasks \
+                --cluster "$CLUSTER_NAME" \
+                --tasks "$OLD_TASK_ARN" \
+                --query 'tasks[0].lastStatus' \
+                --output text
+            )"
+
+            echo "Previous task status: $OLD_STATUS"
+
+            if [ "$OLD_STATUS" = "STOPPED" ]; then
+              echo "PASS: The previous task drained and stopped."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "The previous task did not reach STOPPED state."
+          exit 1
+
+      - name: Confirm the replacement target is healthy
+        shell: bash
+        env:
+          TARGET_GROUP_ARN: ${{ steps.infra.outputs.target_group_arn }}
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 20); do
+            TARGET_STATES="$(
+              aws elbv2 describe-target-health \
+                --target-group-arn "$TARGET_GROUP_ARN" \
+                --query \
+                  'TargetHealthDescriptions[].TargetHealth.State' \
+                --output text
+            )"
+
+            echo "Target states: $TARGET_STATES"
+
+            if [ "$TARGET_STATES" = "healthy" ]; then
+              echo "PASS: Only the replacement target remains and it is healthy."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          aws elbv2 describe-target-health \
+            --target-group-arn "$TARGET_GROUP_ARN" \
+            --output json
+
+          exit 1
+
+      - name: Verify API through the ALB
+        shell: bash
+        env:
+          ALB_URL: ${{ steps.infra.outputs.alb_url }}
+        run: |
+          set -euo pipefail
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 10 \
+            --retry-delay 3 \
+            --retry-all-errors \
+            "$ALB_URL/health" \
+            | python3 -m json.tool
+
+          USERS_STATUS="$(
+            curl \
+              --silent \
+              --show-error \
+              --output "$RUNNER_TEMP/users-response.json" \
+              --write-out '%{http_code}' \
+              "$ALB_URL/users/"
+          )"
+
+          if [ "$USERS_STATUS" != "200" ]; then
+            echo "Database-backed endpoint returned HTTP $USERS_STATUS."
+            cat "$RUNNER_TEMP/users-response.json"
+            exit 1
+          fi
+
+          echo "PASS: Database-backed endpoint returned HTTP 200."
+
+      - name: Write deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## ECS Rolling Deployment"
+            echo
+            echo "- Image tag: \`${GITHUB_SHA}\`"
+            echo "- Image digest: \`${{ steps.published-image.outputs.digest }}\`"
+            echo "- Previous task definition: \`${{ steps.infra.outputs.old_task_definition }}\`"
+            echo "- New task definition: \`${{ steps.rollout.outputs.new_task_definition }}\`"
+            echo "- Previous task: \`${{ steps.infra.outputs.old_task_arn }}\`"
+            echo "- New task: \`${{ steps.new-task.outputs.task_arn }}\`"
+            echo "- ALB URL: ${{ steps.infra.outputs.alb_url }}"
+            echo
+            echo "Deployment completed, the replacement target is healthy, and the previous task stopped."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Capture failure diagnostics
+        if: failure() && steps.infra.outcome == 'success'
+        shell: bash
+        env:
+          CLUSTER_NAME: ${{ steps.infra.outputs.cluster_name }}
+          SERVICE_NAME: ${{ steps.infra.outputs.service_name }}
+          TARGET_GROUP_ARN: ${{ steps.infra.outputs.target_group_arn }}
+        run: |
+          set +e
+
+          echo "=== ECS service and recent events ==="
+
+          aws ecs describe-services \
+            --cluster "$CLUSTER_NAME" \
+            --services "$SERVICE_NAME" \
+            --query 'services[0].{
+              Desired:desiredCount,
+              Running:runningCount,
+              Pending:pendingCount,
+              Deployments:deployments,
+              Events:events[0:15]
+            }' \
+            --output json
+
+          echo "=== Recent stopped tasks ==="
+
+          STOPPED_TASKS="$(
+            aws ecs list-tasks \
+              --cluster "$CLUSTER_NAME" \
+              --service-name "$SERVICE_NAME" \
+              --desired-status STOPPED \
+              --query 'taskArns[0:5]' \
+              --output text
+          )"
+
+          if [ -n "$STOPPED_TASKS" ] && [ "$STOPPED_TASKS" != "None" ]; then
+            aws ecs describe-tasks \
+              --cluster "$CLUSTER_NAME" \
+              --tasks $STOPPED_TASKS \
+              --query 'tasks[].{
+                Task:taskArn,
+                StopCode:stopCode,
+                Reason:stoppedReason,
+                Containers:containers[].{
+                  Name:name,
+                  ExitCode:exitCode,
+                  Reason:reason
+                }
+              }' \
+              --output json
+          fi
+
+          echo "=== ALB target health ==="
+
+          aws elbv2 describe-target-health \
+            --target-group-arn "$TARGET_GROUP_ARN" \
+            --output json

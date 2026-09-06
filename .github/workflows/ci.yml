@@ -1,0 +1,152 @@
+name: Pull Request Quality Gates
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "application/**"
+      - "infrastructure/terraform/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  application:
+    name: Application lint and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: users_posts_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d users_posts_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/users_posts_test
+      SECRET_KEY: ci-only-secret-key-not-used-outside-github-actions
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+
+    defaults:
+      run:
+        working-directory: application
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: application/.python-version
+          cache: pip
+          cache-dependency-path: |
+            application/requirements.txt
+            application/requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            -r requirements.txt \
+            -r requirements-dev.txt
+
+      - name: Run Ruff
+        run: python -m ruff check .
+
+      - name: Apply migrations to CI PostgreSQL
+        run: python -m alembic upgrade head
+
+      - name: Run tests
+        run: python -m pytest -q --maxfail=1
+
+  docker:
+    name: Validate linux-amd64 image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image without publishing
+        uses: docker/build-push-action@v7
+        with:
+          context: application
+          file: application/Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: week13-ci:${{ github.sha }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify image metadata
+        run: |
+          set -euo pipefail
+
+          IMAGE="week13-ci:${GITHUB_SHA}"
+
+          docker image inspect "$IMAGE" \
+            --format 'OS={{.Os}} Architecture={{.Architecture}} User={{.Config.User}}'
+
+          USER_VALUE="$(
+            docker image inspect "$IMAGE" \
+              --format '{{.Config.User}}'
+          )"
+
+          case "$USER_VALUE" in
+            ""|"0"|"root")
+              echo "The image must declare a non-root runtime user."
+              exit 1
+              ;;
+          esac
+
+  terraform:
+    name: Terraform fmt and validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.16.0"
+          terraform_wrapper: false
+
+      - name: Check Terraform formatting
+        working-directory: infrastructure/terraform
+        run: terraform fmt -check -recursive
+
+      - name: Initialize without the remote backend
+        working-directory: infrastructure/terraform/environments/dev
+        run: terraform init -backend=false -input=false
+
+      - name: Validate Terraform
+        working-directory: infrastructure/terraform/environments/dev
+        run: terraform validate
