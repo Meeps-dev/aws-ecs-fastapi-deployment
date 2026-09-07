@@ -1,0 +1,293 @@
+{
+    "services": [
+        {
+            "serviceArn": "arn:aws:ecs:eu-west-2:256748318717:service/aws-ecs-fastapi-deployment-dev-cluster/aws-ecs-fastapi-deployment-dev-api-service",
+            "serviceName": "aws-ecs-fastapi-deployment-dev-api-service",
+            "clusterArn": "arn:aws:ecs:eu-west-2:256748318717:cluster/aws-ecs-fastapi-deployment-dev-cluster",
+            "loadBalancers": [
+                {
+                    "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-2:256748318717:targetgroup/meeps-dev-api-tg/fbcb2ba8a8d05b6e",
+                    "containerName": "fastapi",
+                    "containerPort": 8000
+                }
+            ],
+            "serviceRegistries": [],
+            "status": "ACTIVE",
+            "desiredCount": 1,
+            "runningCount": 1,
+            "pendingCount": 1,
+            "launchType": "FARGATE",
+            "platformVersion": "1.4.0",
+            "platformFamily": "Linux",
+            "taskDefinition": "arn:aws:ecs:eu-west-2:256748318717:task-definition/aws-ecs-fastapi-deployment-dev-api:3",
+            "deploymentConfiguration": {
+                "deploymentCircuitBreaker": {
+                    "enable": true,
+                    "rollback": true
+                },
+                "maximumPercent": 200,
+                "minimumHealthyPercent": 100,
+                "strategy": "ROLLING",
+                "bakeTimeInMinutes": 0
+            },
+            "deployments": [
+                {
+                    "id": "ecs-svc/4123001440245911046",
+                    "status": "PRIMARY",
+                    "taskDefinition": "arn:aws:ecs:eu-west-2:256748318717:task-definition/aws-ecs-fastapi-deployment-dev-api:3",
+                    "desiredCount": 1,
+                    "pendingCount": 1,
+                    "runningCount": 0,
+                    "failedTasks": 3,
+                    "createdAt": "2026-09-07T11:24:49.448000+01:00",
+                    "updatedAt": "2026-09-07T11:25:05.790000+01:00",
+                    "launchType": "FARGATE",
+                    "platformVersion": "1.4.0",
+                    "platformFamily": "Linux",
+                    "networkConfiguration": {
+                        "awsvpcConfiguration": {
+                            "subnets": [
+                                "subnet-04e3ea4bfa4fde042",
+                                "subnet-03051981f78692b65"
+                            ],
+                            "securityGroups": [
+                                "sg-0f08af32e92c5fe49"
+                            ],
+                            "assignPublicIp": "ENABLED"
+                        }
+                    },
+                    "rolloutState": "IN_PROGRESS",
+                    "rolloutStateReason": "ECS deployment ecs-svc/4123001440245911046 in progress."
+                },
+                {
+                    "id": "ecs-svc/7432200168488103369",
+                    "status": "ACTIVE",
+                    "taskDefinition": "arn:aws:ecs:eu-west-2:256748318717:task-definition/aws-ecs-fastapi-deployment-dev-api:2",
+                    "desiredCount": 1,
+                    "pendingCount": 0,
+                    "runningCount": 1,
+                    "failedTasks": 0,
+                    "createdAt": "2026-09-06T17:48:42.405000+01:00",
+                    "updatedAt": "2026-09-07T11:25:05.795000+01:00",
+                    "launchType": "FARGATE",
+                    "platformVersion": "1.4.0",
+                    "platformFamily": "Linux",
+                    "networkConfiguration": {
+                        "awsvpcConfiguration": {
+                            "subnets": [
+                                "subnet-04e3ea4bfa4fde042",
+                                "subnet-03051981f78692b65"
+                            ],
+                            "securityGroups": [
+                                "sg-0f08af32e92c5fe49"
+                            ],
+                            "assignPublicIp": "ENABLED"
+                        }
+                    },
+                    "rolloutState": "COMPLETED",
+                    "rolloutStateReason": "ECS deployment ecs-svc/7432200168488103369 completed."
+                }
+            ],
+            "roleArn": "arn:aws:iam::256748318717:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+            "events": [
+                {
+                    "id": "b964a79c-5e87-49b1-bc50-b707568985b6",
+                    "createdAt": "2026-09-07T11:35:34.122000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has started 1 tasks: (task 24100adc488a4bc18c501613acb2c55c)."
+                },
+                {
+                    "id": "5e15b76e-1827-4396-a2af-abd45724d13c",
+                    "createdAt": "2026-09-07T11:30:42.268000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) was unable to place a task. Reason: CannotPullContainerError: pull image manifest has been retried 7 time(s): failed to resolve ref 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: not found."
+                },
+                {
+                    "id": "8f0010a0-2c60-4038-af2d-eb3cea61a294",
+                    "createdAt": "2026-09-07T11:29:17.442000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has started 1 tasks: (task 33be49507ed14f13b1107351660acd94)."
+                },
+                {
+                    "id": "d3ba79b8-6cd7-4e7b-bacc-810ba4db2535",
+                    "createdAt": "2026-09-07T11:28:45.801000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) was unable to place a task. Reason: CannotPullContainerError: pull image manifest has been retried 7 time(s): failed to resolve ref 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: not found."
+                },
+                {
+                    "id": "3f7bf60b-545e-4448-a791-ae9f7d4e7c1f",
+                    "createdAt": "2026-09-07T11:27:19.135000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has started 1 tasks: (task fb5ffefc130b40ffa23cedb0cde650f4)."
+                },
+                {
+                    "id": "00077b25-f20c-40b0-a1b9-087d142df762",
+                    "createdAt": "2026-09-07T11:26:39.235000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) was unable to place a task. Reason: CannotPullContainerError: pull image manifest has been retried 7 time(s): failed to resolve ref 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: not found."
+                },
+                {
+                    "id": "82700634-ddba-4a4d-8826-1d9c57305da9",
+                    "createdAt": "2026-09-07T11:25:06.792000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has started 1 tasks: (task d335a282ab254119859f16ced558802d)."
+                },
+                {
+                    "id": "35dd5c6a-4ee5-43d9-a537-e7655d092750",
+                    "createdAt": "2026-09-07T05:51:41.989000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "f37f298d-c5b3-4c88-a872-6a79b6918ab2",
+                    "createdAt": "2026-09-06T23:51:33.328000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "c42e1950-76f2-4c6d-aca5-89055d756498",
+                    "createdAt": "2026-09-06T17:51:17.657000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "ef56726d-942d-4c3d-8981-0a5e005bba00",
+                    "createdAt": "2026-09-06T17:51:17.655000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) (deployment ecs-svc/7432200168488103369) deployment completed."
+                },
+                {
+                    "id": "e95a22b2-fbc6-4a54-9852-2090eeff3bd8",
+                    "createdAt": "2026-09-06T17:50:06.005000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service, taskSet ecs-svc/1126916198198474358) has begun draining connections on 1 tasks."
+                },
+                {
+                    "id": "8002ee25-4738-427c-a4a8-b99a3fb9cd3f",
+                    "createdAt": "2026-09-06T17:50:06+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) deregistered 1 targets in (target-group arn:aws:elasticloadbalancing:eu-west-2:256748318717:targetgroup/meeps-dev-api-tg/fbcb2ba8a8d05b6e)"
+                },
+                {
+                    "id": "0c12c62f-a36f-4a01-bf92-986253e3726b",
+                    "createdAt": "2026-09-06T17:50:04.614000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has stopped 1 running tasks: (task 8e8d1051362649cdb2b66789fc11bb18)."
+                },
+                {
+                    "id": "c9b3ee93-eb43-45d1-bbe7-57fb76a7ed87",
+                    "createdAt": "2026-09-06T17:49:14.073000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) registered 1 targets in (target-group arn:aws:elasticloadbalancing:eu-west-2:256748318717:targetgroup/meeps-dev-api-tg/fbcb2ba8a8d05b6e)"
+                },
+                {
+                    "id": "234da380-1f1d-43c1-922b-1ffe6bc25e52",
+                    "createdAt": "2026-09-06T17:48:53.541000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has started 1 tasks: (task 8cc8f69ff4c84f2681d8f74e4221959c)."
+                },
+                {
+                    "id": "ff7c3fee-b210-4574-82d3-9ca37ee0ea9f",
+                    "createdAt": "2026-09-06T14:40:06.760000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "7a16779b-4e96-46eb-bec3-5dbaaf978aee",
+                    "createdAt": "2026-09-06T08:40:02.912000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "ef7dbe6e-5f77-45ca-9ed8-be74dea1837a",
+                    "createdAt": "2026-09-06T02:39:26.264000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "4afdd33e-8ec6-4be1-9bda-75f8f420662c",
+                    "createdAt": "2026-09-05T20:38:51.350000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "441f277c-a1ff-4164-95fa-3818fdd04a3b",
+                    "createdAt": "2026-09-05T14:38:45.386000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "ddf8c96b-09cb-49af-bc9e-4b472795c470",
+                    "createdAt": "2026-09-05T08:38:14.913000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "3fec47cc-035e-4442-9692-6420c2571345",
+                    "createdAt": "2026-09-05T02:37:34.113000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "f38c5ee8-cc7c-4286-af2e-ba4c2d405731",
+                    "createdAt": "2026-09-04T20:37:06.091000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "b1190a0d-8b32-445d-8b07-d719fc80f72e",
+                    "createdAt": "2026-09-04T14:37:03.128000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "ad97133d-8021-4f37-a890-6e3eb2820eb8",
+                    "createdAt": "2026-09-04T08:36:59.595000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "0e145e75-7040-436c-9141-60060aa04288",
+                    "createdAt": "2026-09-04T02:36:46.807000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "bf64769f-bf31-4907-adcd-51520cb7ffca",
+                    "createdAt": "2026-09-03T20:36:28.452000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has reached a steady state."
+                },
+                {
+                    "id": "08fe64e3-05c7-4a00-9f66-817b84ca5c69",
+                    "createdAt": "2026-09-03T20:36:28.451000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) (deployment ecs-svc/1126916198198474358) deployment completed."
+                },
+                {
+                    "id": "27ab9841-f0c2-41c2-98f3-14a0dd1d83d3",
+                    "createdAt": "2026-09-03T20:35:47.116000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) registered 1 targets in (target-group arn:aws:elasticloadbalancing:eu-west-2:256748318717:targetgroup/meeps-dev-api-tg/fbcb2ba8a8d05b6e)"
+                },
+                {
+                    "id": "516107a7-8e81-470d-a016-bb6430ecb504",
+                    "createdAt": "2026-09-03T20:35:27.412000+01:00",
+                    "message": "(service aws-ecs-fastapi-deployment-dev-api-service) has started 1 tasks: (task 8e8d1051362649cdb2b66789fc11bb18)."
+                }
+            ],
+            "createdAt": "2026-09-03T20:35:14.140000+01:00",
+            "currentServiceDeployment": "arn:aws:ecs:eu-west-2:256748318717:service-deployment/aws-ecs-fastapi-deployment-dev-cluster/aws-ecs-fastapi-deployment-dev-api-service/FyyeJ8xf16Eck6lLi5BKu",
+            "currentServiceRevisions": [
+                {
+                    "arn": "arn:aws:ecs:eu-west-2:256748318717:service-revision/aws-ecs-fastapi-deployment-dev-cluster/aws-ecs-fastapi-deployment-dev-api-service/4123001440245911046",
+                    "requestedTaskCount": 1,
+                    "runningTaskCount": 0,
+                    "pendingTaskCount": 1
+                },
+                {
+                    "arn": "arn:aws:ecs:eu-west-2:256748318717:service-revision/aws-ecs-fastapi-deployment-dev-cluster/aws-ecs-fastapi-deployment-dev-api-service/7432200168488103369",
+                    "requestedTaskCount": 1,
+                    "runningTaskCount": 1,
+                    "pendingTaskCount": 0
+                }
+            ],
+            "placementConstraints": [],
+            "placementStrategy": [],
+            "networkConfiguration": {
+                "awsvpcConfiguration": {
+                    "subnets": [
+                        "subnet-04e3ea4bfa4fde042",
+                        "subnet-03051981f78692b65"
+                    ],
+                    "securityGroups": [
+                        "sg-0f08af32e92c5fe49"
+                    ],
+                    "assignPublicIp": "ENABLED"
+                }
+            },
+            "healthCheckGracePeriodSeconds": 60,
+            "schedulingStrategy": "REPLICA",
+            "deploymentController": {
+                "type": "ECS"
+            },
+            "createdBy": "arn:aws:iam::256748318717:user/meeps-admin",
+            "enableECSManagedTags": true,
+            "propagateTags": "SERVICE",
+            "enableExecuteCommand": false,
+            "availabilityZoneRebalancing": "ENABLED",
+            "resourceManagementType": "CUSTOMER"
+        }
+    ],
+    "failures": []
+}

@@ -1,0 +1,101 @@
+{
+    "tasks": [
+        {
+            "attachments": [
+                {
+                    "id": "eb008dc0-4345-436b-a1a5-21542e384d9d",
+                    "type": "ElasticNetworkInterface",
+                    "status": "DELETED",
+                    "details": [
+                        {
+                            "name": "subnetId",
+                            "value": "subnet-03051981f78692b65"
+                        },
+                        {
+                            "name": "networkInterfaceId",
+                            "value": "eni-001a6d8179601906d"
+                        },
+                        {
+                            "name": "macAddress",
+                            "value": "0a:c5:30:34:28:e7"
+                        },
+                        {
+                            "name": "privateDnsName",
+                            "value": "ip-10-13-1-131.eu-west-2.compute.internal"
+                        },
+                        {
+                            "name": "privateIPv4Address",
+                            "value": "10.13.1.131"
+                        }
+                    ]
+                }
+            ],
+            "attributes": [
+                {
+                    "name": "ecs.cpu-architecture",
+                    "value": "x86_64"
+                }
+            ],
+            "availabilityZone": "eu-west-2b",
+            "clusterArn": "arn:aws:ecs:eu-west-2:256748318717:cluster/aws-ecs-fastapi-deployment-dev-cluster",
+            "connectivity": "CONNECTED",
+            "connectivityAt": "2026-09-07T11:25:09.423000+01:00",
+            "containers": [
+                {
+                    "containerArn": "arn:aws:ecs:eu-west-2:256748318717:container/aws-ecs-fastapi-deployment-dev-cluster/d335a282ab254119859f16ced558802d/484bbc8e-ad7f-4ebe-9bd0-9eba36346402",
+                    "taskArn": "arn:aws:ecs:eu-west-2:256748318717:task/aws-ecs-fastapi-deployment-dev-cluster/d335a282ab254119859f16ced558802d",
+                    "name": "fastapi",
+                    "image": "256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist",
+                    "runtimeId": "d335a282ab254119859f16ced558802d-0557774949",
+                    "lastStatus": "STOPPED",
+                    "networkInterfaces": [
+                        {
+                            "attachmentId": "eb008dc0-4345-436b-a1a5-21542e384d9d",
+                            "privateIpv4Address": "10.13.1.131"
+                        }
+                    ],
+                    "healthStatus": "UNKNOWN",
+                    "cpu": "0"
+                }
+            ],
+            "cpu": "256",
+            "createdAt": "2026-09-07T11:25:06.729000+01:00",
+            "desiredStatus": "STOPPED",
+            "enableExecuteCommand": false,
+            "executionStoppedAt": "2026-09-07T11:26:26.449000+01:00",
+            "group": "service:aws-ecs-fastapi-deployment-dev-api-service",
+            "healthStatus": "UNKNOWN",
+            "lastStatus": "STOPPED",
+            "launchType": "FARGATE",
+            "memory": "512",
+            "overrides": {
+                "containerOverrides": [
+                    {
+                        "name": "fastapi"
+                    }
+                ],
+                "inferenceAcceleratorOverrides": []
+            },
+            "platformVersion": "1.4.0",
+            "platformFamily": "Linux",
+            "pullStartedAt": "2026-09-07T11:25:17.068000+01:00",
+            "pullStoppedAt": "2026-09-07T11:25:17.080000+01:00",
+            "startedBy": "ecs-svc/4123001440245911046",
+            "stopCode": "TaskFailedToStart",
+            "stoppedAt": "2026-09-07T11:27:10.273000+01:00",
+            "stoppedReason": "CannotPullContainerError: pull image manifest has been retried 7 time(s): failed to resolve ref 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: 256748318717.dkr.ecr.eu-west-2.amazonaws.com/aws-ecs-fastapi-deployment:tag-does-not-exist: not found",
+            "stoppingAt": "2026-09-07T11:26:36.471000+01:00",
+            "tags": [],
+            "taskArn": "arn:aws:ecs:eu-west-2:256748318717:task/aws-ecs-fastapi-deployment-dev-cluster/d335a282ab254119859f16ced558802d",
+            "taskDefinitionArn": "arn:aws:ecs:eu-west-2:256748318717:task-definition/aws-ecs-fastapi-deployment-dev-api:3",
+            "version": 5,
+            "ephemeralStorage": {
+                "sizeInGiB": 20
+            },
+            "fargateEphemeralStorage": {
+                "sizeInGiB": 20
+            }
+        }
+    ],
+    "failures": []
+}
