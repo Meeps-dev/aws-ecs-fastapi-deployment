@@ -1,0 +1,20 @@
+{
+    "TargetHealthDescriptions": [
+        {
+            "Target": {
+                "Id": "10.13.0.202",
+                "Port": 8000,
+                "AvailabilityZone": "eu-west-2a"
+            },
+            "HealthCheckPort": "8000",
+            "TargetHealth": {
+                "State": "healthy"
+            },
+            "AdministrativeOverride": {
+                "State": "no_override",
+                "Reason": "AdministrativeOverride.NoOverride",
+                "Description": "No override is currently active on target"
+            }
+        }
+    ]
+}

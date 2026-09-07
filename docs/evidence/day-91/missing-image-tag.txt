@@ -1,0 +1,2 @@
+
+aws: [ERROR]: An error occurred (ImageNotFoundException) when calling the DescribeImages operation: The image with imageId {imageDigest:'null', imageTag:'tag-does-not-exist'} does not exist within the repository with name 'aws-ecs-fastapi-deployment' in the registry with id '256748318717'
